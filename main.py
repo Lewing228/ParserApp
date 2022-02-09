@@ -149,18 +149,17 @@ class MainWindow(QtWidgets.QWidget, Ui_Form):
         self.pushButton.clicked.connect(self.btn)
         self.comboBox.currentTextChanged.connect(self.on_combobox_changed)
         self.lineEdit_2.setText(''  + '.csv')
+        self.threads=[] 
+        self.combo_status=0
 
     def on_combobox_changed(self, index):
         index = self.comboBox.currentIndex()
         print (index)
 
-        self.url = self.lineEdit.text()
-        self.file = self.lineEdit_2.text()
-
         if index == 0:
-            self.thread = ThreadS(self.url, self.file, self.HEADERS)
+            self.combo_status=index
         elif index == 1:
-            self.thread = ThreadM(self.url, self.file, self.HEADERS)
+            self.combo_status=index
 
 
     def btn(self):
@@ -170,11 +169,21 @@ class MainWindow(QtWidgets.QWidget, Ui_Form):
         
         
         self.pushButton.setEnabled(False)
- 
+        self.url = self.lineEdit.text()
+        self.file = self.lineEdit_2.text()
+
+        
+        if self.combo_status == 0:
+            os.chdir('Спаршенные данные\Sulpak')
+            self.thread = ThreadS(self.url, self.file, self.HEADERS)
+        elif self.combo_status == 1:
+            os.chdir('Спаршенные данные\Mechta')
+            self.thread = ThreadM(self.url, self.file, self.HEADERS)
+
+        self.threads.append(self.thread)
         self.thread.stepChanged.connect(self.onStepChanged)
         self.thread.finished.connect(self.save_file)
         self.thread.error.connect(self.error)
-        
         self.thread.start()  
 
     def error(self, error):
@@ -201,4 +210,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = MainWindow()
     w.show()
-    sys.exit(app.exec_())     
+    sys.exit(app.exec_())         
