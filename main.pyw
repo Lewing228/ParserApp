@@ -173,8 +173,10 @@ class MainWindow(QtWidgets.QWidget, Ui_Form):
 
         
         if self.combo_status == 0:
+            self.file('Спаршенные данные\Sulpak')
             self.thread = ThreadS(self.url, self.file, self.HEADERS)
         elif self.combo_status == 1:
+            self.file('Спаршенные данные\Mechta')
             self.thread = ThreadM(self.url, self.file, self.HEADERS)
 
         self.threads.append(self.thread)
@@ -192,12 +194,7 @@ class MainWindow(QtWidgets.QWidget, Ui_Form):
         self.widget.append(f'Парсинг страницы {page} из {pages_count}...')    
 
     def save_file(self, items):
-        if self.combo_status == 0:
-            self.combobox_name = "Спаршенные данные/Sulpak"
-        elif self.combo_status == 1:
-            self.combobox_name = "Спаршенные данные/Mechta"
-        file_s=self.combobox_name +'/'+self.file
-        with open(file_s, 'w', newline='') as file:
+        with open(self.file, 'w', newline='') as file:
             writer = csv.writer(file, delimiter=';')
             writer.writerow(['Модель', 'Цена', 'Цена без скидки'])
             for item in items:
@@ -205,6 +202,7 @@ class MainWindow(QtWidgets.QWidget, Ui_Form):
                 
         self.widget.append(f'Получено {len(items)} товаров')
         self.pushButton.setEnabled(True)
+        os.startfile(self.file)
         
 
 if __name__ == "__main__":
