@@ -1,6 +1,6 @@
 import sys
-import os
-import os.path
+import requests
+from selenium import webdriver
 import csv
 import tkinter as tk
 from tkinter import ttk
@@ -9,11 +9,6 @@ from PyQt5.Qt import *
 
 from Сайты.Sulpak import ThreadS
 from Сайты.Mechta import ThreadM
-
-from pickle import TRUE
-
-
-
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -138,6 +133,7 @@ class Ui_Form(object):
 
 
 class MainWindow(QtWidgets.QWidget, Ui_Form):
+
     HEADERS = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36',
         'accept' : '*/*'
@@ -168,14 +164,14 @@ class MainWindow(QtWidgets.QWidget, Ui_Form):
         
         
         self.pushButton.setEnabled(False)
-        self.url = self.lineEdit.text()
+        self.r = self.lineEdit.text()
         self.file = self.lineEdit_2.text()
 
         
         if self.combo_status == 0:
-            self.thread = ThreadS(self.url, self.file, self.HEADERS)
+            self.thread = ThreadS(self.r, self.file, self.HEADERS)
         elif self.combo_status == 1:
-            self.thread = ThreadM(self.url, self.file, self.HEADERS)
+            self.thread = ThreadM(self.r, self.file, self.HEADERS)
 
         self.threads.append(self.thread)
         self.thread.stepChanged.connect(self.onStepChanged)
@@ -201,7 +197,7 @@ class MainWindow(QtWidgets.QWidget, Ui_Form):
             writer = csv.writer(file, delimiter=';')
             writer.writerow(['Модель', 'Цена', 'Цена без скидки'])
             for item in items:
-                writer.writerow([item['title'], item['price'], item['old price']])
+                writer.writerow([item['title'],item['price'], item['old price']])
                 
         self.widget.append(f'Получено {len(items)} товаров')
         self.pushButton.setEnabled(True)

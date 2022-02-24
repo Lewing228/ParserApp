@@ -1,7 +1,10 @@
+
+
 from PyQt5.Qt import *
 from pickle import TRUE
 import requests
 from bs4 import BeautifulSoup
+import json
 
 
 
@@ -32,12 +35,11 @@ class ThreadM(QThread):
         
         if html.status_code == 200:
             products = []
+            section = self.url.split('/')[4]
             pages_count = self.get_pages_count(html.text)
             for page in range(1, pages_count + 1):
                 self.stepChanged.emit(page, pages_count)
-                
-                html = self.get_html(params={'page': page})
-                products.extend(self.get_content(html.text))
+                products.extend(self.get_content(page, section))
                 self.msleep(50)
                 
             self.finished.emit(products)
@@ -61,21 +63,33 @@ class ThreadM(QThread):
         else:
             return 1
 
-    def get_content(self, html):
-        soup = BeautifulSoup(html, 'html.parser')
-        items = soup.find_all("div", class_="hoverCard")
+    def get_content(self, page, section):
+        url = f'https://www.mechta.kz/api/new/catalog?properties=&page={page}&section={section}'
+        rl = requests.get(url)
+        data = []
+        for j in rl.json()['data']['items']:
+            title = j['title']
+            ids = j['id']
+            data.append({
+                'product_ids': ids,
+                'title': title
+            })
         
-        products = []
-        for item in items:
-            price = item.find('div', class_='text-ts1')
-            old_price = ''
-            if price:
-                price = price.get_text(strip=TRUE).replace(',', ' ')
-            else:
-                price = 'Нет в наличии'
-            products.append({
-                'title': item.find('div', class_='ellipsis').get_text(strip=TRUE),
+        data = sorted(data, key=lambda x: x['product_ids'])
+        res = {'product_ids': ','.join(str(i.get('product_ids')) for i in data)}
+
+        rs = requests.post('https://www.mechta.kz/api/new/mindbox/actions/catalog', data=res).json()['data']
+
+        data2 = []
+        for item, k in rs.items():
+            price = k['prices']['discounted_price']
+            old_price = k['prices']['base_price']
+            if old_price == price:
+                old_price = 'Скидки нет'
+
+            data2.append({
                 'price': price,
                 'old price': old_price
-            })    
-        return products
+            })
+
+        return [{**x, **y} for x, y in zip(data, data2)]
